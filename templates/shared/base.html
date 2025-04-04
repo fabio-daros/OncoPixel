@@ -1,0 +1,30 @@
+<!-- templates/shared/base.html -->
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="{{ request.LANGUAGE_CODE }}" translate="no">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}OncoPixel{% endblock %}</title>
+    <link href="{% static 'css/dist/styles.css' %}" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-gray-200 font-sans min-h-screen px-6 py-10">
+
+<div class="flex justify-end">
+    <form action="{% url 'set_language' %}" method="post">
+        {% csrf_token %}
+        <select name="language" onchange="this.form.submit()"
+                class="bg-gray-800 text-white px-3 py-1 rounded border border-gray-600">
+            <option value="en" {% if request.LANGUAGE_CODE == 'en' %}selected{% endif %}>English</option>
+            <option value="pt-br" {% if request.LANGUAGE_CODE == 'pt-br' %}selected{% endif %}>Português</option>
+
+        </select>
+
+    </form>
+</div>
+
+<div class="max-w-4xl mx-auto mt-6">
+    {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

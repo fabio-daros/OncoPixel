@@ -1,16 +1,14 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>OncoPixel - Image Upload</title>
-    <link href="{% static 'css/dist/styles.css' %}" rel="stylesheet">
-</head>
-<body class="bg-gray-900 text-gray-200 font-sans px-6 py-10">
+{% extends "shared/base.html" %}
+{% load static i18n %}
 
+{% block title %}Upload - OncoPixel{% endblock %}
+
+{% block content %}
 <div class="max-w-xl mx-auto">
     <h1 class="text-3xl font-semibold mb-2 text-left text-white">OncoPixel</h1>
-    <p class="text-left text-gray-400 mb-6">Upload a medical image to analyze it using artificial intelligence.</p>
+    <p class="text-left text-gray-400 mb-6">
+        {% trans "Upload images for processing." %}
+    </p>
 
     <div class="bg-gray-800 border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
         <form method="POST" enctype="multipart/form-data">
@@ -23,10 +21,8 @@
     <div class="flex justify-center mt-8">
         <button type="submit"
                 class="bg-green-700 hover:bg-green-800 text-white font-semibold py-2 px-6 rounded">
-            Analyze
+            {% trans "Analyze" %}
         </button>
     </div>
 </div>
-
-</body>
-</html>
+{% endblock %}
