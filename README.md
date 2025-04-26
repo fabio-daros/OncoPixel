@@ -87,3 +87,17 @@ Keep the django light
 Allows you to change the model in the future easily
 
 Can serve multiple models in the same microservice
+
+
+---
+
+IMAGES:
+
+4. Upload of heavy images: Performance tips
+Store images in the file system, not on the bank.
+
+Use media_root + imagefield (as you have already configured).
+
+Valides extensions and sizes in Forms.py to avoid abuse.
+
+Optional: Create a Background Task with Celery or DRF to process images with AI after upload.

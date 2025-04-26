@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import TumorImage, ImageUploadSettings
 
-# Register your models here.
+admin.site.register(TumorImage)
+admin.site.register(ImageUploadSettings)

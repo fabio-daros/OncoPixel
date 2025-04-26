@@ -1,28 +1,92 @@
 {% extends "shared/base.html" %}
-{% load static i18n %}
+{% load static i18n widget_tweaks %}
 
-{% block title %}Upload - OncoPixel{% endblock %}
+{% block title %}Uploads - OncoPixel{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto">
-    <h1 class="text-3xl font-semibold mb-2 text-left text-white">OncoPixel</h1>
-    <p class="text-left text-gray-400 mb-6">
-        {% trans "Upload images for processing." %}
-    </p>
-
-    <div class="bg-gray-800 border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
-        <form method="POST" enctype="multipart/form-data">
+    <div class="max-w-xl mx-auto mt-6 px-6">
+        <!-- Title -->
+        <h1 class="text-5xl font-Normal text-white mb-4 text-center">OncoPixel - Upload</h1>
+        <p class="text-center text-gray-400 text-md mb-6">
+            {% trans "Load images and enter a reference ID." %}
+        </p>
+        <!-- Form -->
+        <form method="POST" enctype="multipart/form-data" class="space-y-6 text-left">
             {% csrf_token %}
-            <input type="file" name="image" accept="image/*"
-                   class="block w-full text-sm text-gray-600 mb-4"/>
+            <!-- Patient ID -->
+            <div>
+                <label for="{{ form.patient_id.id_for_label }}" class="block text-gray-300 font-medium mb-2 mt-6">
+                    {% trans "Patient ID (Reference):" %}
+                </label>
+                {% render_field form.patient_id class="w-20 p-2 pl-4 rounded bg-gray-800 text-white border border-gray-500 focus:border-green-500 mb-6" %}
+                {% if form.patient_id.errors %}
+                    <p class="text-red-400 text-sm mt-1">{{ form.patient_id.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <!-- Upload -->
+            <div>
+                <label class="block text-gray-300 font-medium mb-2">
+                    {% trans "Select Image:" %}
+                </label>
+                <!-- Show permitted extensions -->
+                <p class="text-gray-400 text-sm mb-2">
+                    {% trans "Allowed file types:" %} {{ allowed_extensions|join:", " }}
+                </p>
+
+                <div class="border-2 border-dashed border-gray-500 rounded-lg p-6 bg-gray-800 text-center">
+                    <p class="text-gray-400 mb-4">
+                        {% trans "Click on the button to select images." %}
+                    </p>
+
+                    <button type="button" id="customUploadBtn" style="cursor: pointer"
+                            class="bg-green-700 hover:bg-green-800 text-white font-semibold py-2 px-6 rounded inline-block">
+                        {% trans "Choose File" %}
+                    </button>
+                </div>
+                <p id="file-name" class="text-gray-400 mt-2"></p>
+                <!-- Real input -->
+                <input type="file" name="image" id="id_image" accept="image/*"
+                       class="hidden" multiple>
+                {% if form.image.errors %}
+                    <div
+                            x-data="{ show: true }"
+                            x-init="setTimeout(() => show = false, 8000)"
+                            x-show="show"
+                            x-transition.opacity.duration.500ms
+                            class="bg-red-100 border border-red-500 px-4 py-3 rounded relative mt-4 text-sm"
+                    >
+                        {% for error in form.image.errors %}
+                            <p class="text-red-700">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            <!-- Button -->
+            <div class="text-center pt-6 mt-8">
+                <button type="submit"
+                        class="bg-green-700 hover:bg-green-800 transition px-6 py-2 rounded text-white font-semibold cursor-pointer">
+                    {% trans "Analyze" %}
+                </button>
+            </div>
         </form>
     </div>
 
-    <div class="flex justify-center mt-8">
-        <button type="submit"
-                class="bg-green-700 hover:bg-green-800 text-white font-semibold py-2 px-6 rounded">
-            {% trans "Analyze" %}
-        </button>
-    </div>
-</div>
+    <script>
+        const input = document.getElementById("id_image");
+        const uploadBtn = document.getElementById("customUploadBtn");
+        const fileNameDisplay = document.getElementById("file-name");
+
+        uploadBtn.addEventListener("click", () => {
+            input.click();
+        });
+
+        input.addEventListener("change", function () {
+            const fileNames = Array.from(this.files).map(file => file.name).join(', ');
+            if (fileNameDisplay) {
+                fileNameDisplay.textContent = fileNames || "({% trans 'No file chosen' %})";
+            }
+        });
+    </script>
+
+
 {% endblock %}

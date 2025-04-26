@@ -1,8 +1,43 @@
-*.pyc
-*.pyo
-*.pyd
+# Byte-compiled / optimized / DLL files
 __pycache__/
+*.py[cod]
+*$py.class
+
+# SQLite database
 db.sqlite3
-/static/
+
+# Environment variables
 .env
+
+# Logs
 *.log
+
+# Django static and media files
+/staticfiles/
+/media/
+/static/
+
+# Tailwind generated files (caso use o `theme/static/`)
+theme/static_src/
+theme/static/
+
+# VS Code settings
+.vscode/
+
+# macOS
+.DS_Store
+
+# Python virtual environment
+venv/
+.env*/  # caso tenha `.env.dev`, `.env.prod`, etc
+
+# PyCharm
+.idea/
+
+# Coverage reports
+htmlcov/
+.coverage
+
+# Migrations
+**/migrations/*.py
+**/migrations/__pycache__/

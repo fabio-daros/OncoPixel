@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-04-04 15:04-0300\n"
+"POT-Creation-Date: 2025-04-26 16:07-0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,17 +18,67 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: image_analysis/templates/image_analysis/upload.html:14
-msgid "Upload images for processing."
-msgstr "Envie imagens para processamento."
+#: image_analysis/forms.py:10
+msgid "Patient ID"
+msgstr "ID do paciente"
 
+#: image_analysis/forms.py:11
+msgid "Tumor Image"
+msgstr "Imagem"
+
+#: image_analysis/forms.py:29
+msgid "Unsupported file extension. Allowed formats: "
+msgstr ""
+"Extensão de arquivo não suportada. Formatos permitidos: jpg, jpeg, png."
+
+#: image_analysis/templates/image_analysis/upload.html:11
+msgid "Load images and enter a reference ID."
+msgstr "Carregue imagens e relacione um ID de paciente."
+
+#: image_analysis/templates/image_analysis/upload.html:19
+msgid "Patient ID (Reference):"
+msgstr "ID do paciente (Referência):"
+
+#: image_analysis/templates/image_analysis/upload.html:29
+msgid "Select Image:"
+msgstr "Selecione Imagens"
+
+#: image_analysis/templates/image_analysis/upload.html:33
+msgid "Allowed file types:"
+msgstr "Extensões permitidas de arquivo:"
+
+#: image_analysis/templates/image_analysis/upload.html:38
+msgid "Click on the button to select images."
+msgstr "Clique no botão para selecionar imagens."
+
+#: image_analysis/templates/image_analysis/upload.html:43
+msgid "Choose File"
+msgstr "Escolha o arquivo"
+
+#: image_analysis/templates/image_analysis/upload.html:59
 msgid "Analyze"
 msgstr "Analisar"
 
-#: oncopixel/settings.py:86
+#: image_analysis/templates/image_analysis/upload.html:77
+msgid "No file chosen"
+msgstr "Nenhum arquivo escolhido"
+
+#: image_analysis/templates/image_analysis/upload_success.html:6
+msgid "Image sent successfully!"
+msgstr "Imagem enviada com sucesso!"
+
+#: image_analysis/templates/image_analysis/upload_success.html:7
+msgid "Your image has been received and will be analyzed."
+msgstr "Sua imagem foi recebida e será analisada."
+
+#: image_analysis/templates/image_analysis/upload_success.html:11
+msgid "Back to Upload"
+msgstr "Voltar para upload"
+
+#: oncopixel/settings.py:102 templates/shared/base.html:18
 msgid "English"
 msgstr "Inglês"
 
-#: oncopixel/settings.py:87
+#: templates/shared/base.html:19
 msgid "Portuguese"
 msgstr "Português"
