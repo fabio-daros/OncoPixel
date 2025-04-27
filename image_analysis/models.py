@@ -24,3 +24,23 @@ class ImageUploadSettings(models.Model):
 
     def __str__(self):
         return "Image Upload Settings"
+
+    class Meta:
+        verbose_name = "Image Upload Settings"
+        verbose_name_plural = "Upload Settings"
+
+
+class AnalyzerSettings(models.Model):
+    name = models.CharField(max_length=100, default="OncoBrain")
+    endpoint_url = models.URLField(
+        default="http://127.0.0.1:8000/analyze/",
+        help_text="URL of the OncoBrain analyze endpoint"
+    )
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.name} Settings"
+
+    class Meta:
+        verbose_name = "OncoBrain Setting"
+        verbose_name_plural = "OncoBrain Settings"

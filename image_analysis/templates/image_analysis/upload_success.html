@@ -3,11 +3,26 @@
 
 {% block content %}
     <div class="text-white text-center p-10">
+
+        {% if messages %}
+            <div class="mb-4" x-data="{ show: true }" x-init="setTimeout(() => show = false, 15000)" x-show="show"
+                 x-transition>
+                {% for message in messages %}
+                    <div class="p-4 mb-2 rounded-lg
+                  {% if message.tags == 'success' %}bg-green-600 text-white{% endif %}
+                  {% if message.tags == 'error' %}bg-red-600 text-white{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         <h2 class="text-2xl font-bold">{% trans "Image sent successfully!" %}</h2>
         <p class="mt-4">{% trans "Your image has been received and will be analyzed." %}</p>
 
         <div class="mt-8">
-            <a href="{% url 'upload_image' %}" class="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded">
+            <a href="{% url 'upload_image' %}"
+               class="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded">
                 {% trans "Back to Upload" %}
             </a>
         </div>
