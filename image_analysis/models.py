@@ -32,9 +32,10 @@ class ImageUploadSettings(models.Model):
 
 class AnalyzerSettings(models.Model):
     name = models.CharField(max_length=100, default="OncoBrain")
-    endpoint_url = models.URLField(
+    endpoint_url = models.CharField(
+        max_length=255,
         default="http://127.0.0.1:8000/analyze/",
-        help_text="URL of the OncoBrain analyze endpoint"
+        help_text="URL of the OncoBrain analyze endpoint (http://hostname:port/analyze/)"
     )
     active = models.BooleanField(default=True)
 

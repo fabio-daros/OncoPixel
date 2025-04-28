@@ -5,7 +5,7 @@
     <div class="text-white text-center p-10">
 
         {% if messages %}
-            <div class="mb-4" x-data="{ show: true }" x-init="setTimeout(() => show = false, 15000)" x-show="show"
+            <div class="mb-4" x-data="{ show: true }" x-show="show"
                  x-transition>
                 {% for message in messages %}
                     <div class="p-4 mb-2 rounded-lg
@@ -16,9 +16,6 @@
                 {% endfor %}
             </div>
         {% endif %}
-
-        <h2 class="text-2xl font-bold">{% trans "Image sent successfully!" %}</h2>
-        <p class="mt-4">{% trans "Your image has been received and will be analyzed." %}</p>
 
         <div class="mt-8">
             <a href="{% url 'upload_image' %}"

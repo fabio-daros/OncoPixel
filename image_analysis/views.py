@@ -22,7 +22,6 @@ def upload_image(request):
                     image=file
                 )
 
-                # Agora enviando o objeto inteiro!
                 try:
                     analyze_image(tumor_image)
                     messages.success(request, f"Image {tumor_image.id} analyzed successfully!")
@@ -41,7 +40,6 @@ def upload_image(request):
         'form': form,
         'allowed_extensions': allowed_extensions
     })
-
 
 
 def upload_success(request):

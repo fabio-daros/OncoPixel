@@ -9,7 +9,7 @@ def get_analyzer_url():
     settings = AnalyzerSettings.objects.filter(active=True).first()
     if settings and settings.endpoint_url:
         return settings.endpoint_url
-    return "http://127.0.0.1:8000/analyze/"  # Fallback padrão
+    return "http://oncobrain:8000/analyze/"  # Fallback padrão
 
 
 # Mapeamento das classes para diferentes idiomas
