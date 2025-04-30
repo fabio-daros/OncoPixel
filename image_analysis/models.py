@@ -45,3 +45,11 @@ class AnalyzerSettings(models.Model):
     class Meta:
         verbose_name = "OncoBrain Setting"
         verbose_name_plural = "OncoBrain Settings"
+
+
+class TrainingVisualization(models.Model):
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Training Chart"
+        verbose_name_plural = "Training Charts"

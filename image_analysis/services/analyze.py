@@ -3,7 +3,6 @@ from django.utils.translation import gettext as _
 from django.utils import translation
 from image_analysis.models import AnalyzerSettings
 
-
 # Função para obter a URL do servidor ativo
 def get_analyzer_url():
     settings = AnalyzerSettings.objects.filter(active=True).first()
@@ -11,27 +10,25 @@ def get_analyzer_url():
         return settings.endpoint_url
     return "http://oncobrain:8000/analyze/"  # Fallback padrão
 
-
 # Mapeamento das classes para diferentes idiomas
 CLASS_NAMES = {
-    0: {
+    "normal": {
         "en": "Normal",
         "pt-br": "Normal"
     },
-    1: {
+    "benign": {
         "en": "Benign",
         "pt-br": "Benigno"
     },
-    2: {
+    "malignant": {
         "en": "Malignant",
         "pt-br": "Maligno"
     },
-    3: {
+    "carcinoma": {
         "en": "Carcinoma",
         "pt-br": "Carcinoma"
     }
 }
-
 
 # Função principal para enviar imagem e receber a análise
 def analyze_image(tumor_image):
@@ -43,15 +40,16 @@ def analyze_image(tumor_image):
             response = requests.post(url, files=files)
 
         if response.status_code == 200:
-            prediction = response.json().get("prediction")
+            prediction = response.json().get("prediction", {})
+            predicted_class = prediction.get("class", "").lower()
 
             tumor_image.metadata = {"prediction": prediction}
 
             current_language = translation.get_language()
 
-            diagnosis = CLASS_NAMES.get(prediction, {}).get(
+            diagnosis = CLASS_NAMES.get(predicted_class, {}).get(
                 current_language,
-                CLASS_NAMES.get(prediction, {}).get("en", "Unknown")
+                CLASS_NAMES.get(predicted_class, {}).get("en", "Unknown")
             )
 
             tumor_image.diagnosis = diagnosis
