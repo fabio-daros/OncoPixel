@@ -1,0 +1,94 @@
+{% extends "shared/base.html" %}
+{% load i18n %}
+
+{% load custom_filters %}
+
+{% block content %}
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+    <div class="text-white max-w-7xl px-6 py-12 mx-auto flex-grow">
+        <h2 class="text-left text-xl font-semibold text-gray-300 mb-4">
+            {% trans "Summary Results:" %}
+        </h2>
+
+
+        {% for image in image_data %}
+            <div id="image-{{ image.id }}" class="scroll-mt-24"></div>
+            <div class="text-left text-sm font-semibold text-gray-400 mb-2">
+                {{ image.filename }}
+            </div>
+            <div class="text-center text-sm mb-2 font-semibold rounded-sm
+        {% if image.confidence %}
+            bg-green-600
+        {% elif image.status == 'error' %}
+            bg-red-600
+        {% else %}
+            bg-yellow-400 text-black
+        {% endif %}">
+                {{ image.status_message }}
+            </div>
+            <div class="flex justify-center">
+            <div class="bg-gray-800 rounded-lg shadow-lg p-8 mb-8 flex flex-col md:flex-row gap-2">
+                <!-- Left: Image -->
+                <div x-data="{ openComment: false }" class="relative flex-1 flex flex-col items-stretch">
+
+                    <!-- Container da imagem com overlay -->
+                    <div
+                            x-data="overlayBoxData()"
+                            x-init="detections = {{ image.metadata.detections|default:'[]'|safe }}"
+                            class="relative w-full">
+
+                        <!-- Imagem -->
+                        <div class="relative w-full">
+                            <img src="{{ image.url }}"
+                                 alt="Tumor image"
+                                 x-ref="mainImage"
+                                 @load="imageLoaded = true; imgNaturalWidth = $refs.mainImage.naturalWidth; imgNaturalHeight = $refs.mainImage.naturalHeight;"
+                                 style="display: block; width: 100%; height: auto; max-width: none;">
+                        </div>
+
+                        <!-- Overlay das detecções -->
+                        <template x-if="imageLoaded && detections.length">
+                            <template x-for="(det, index) in detections" :key="index + '-' + redrawKey">
+                                <template x-if="visibleClasses[det.label]">
+                                    <div>
+                                        <div :style="getLabelStyle(det.box)">
+                                            <span x-text="`Class ${det.label} (${(det.score * 100).toFixed(1)}%)`"></span>
+                                        </div>
+                                        <div :style="getBoxStyle(det.box, det.label)"></div>
+                                    </div>
+                                </template>
+                            </template>
+                        </template>
+
+                        <!-- Controles de visibilidade -->
+                        <div class="flex flex-wrap gap-4 mb-2 text-sm text-gray-200 mt-2">
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" x-model="visibleClasses[1]" class="form-checkbox text-blue-500">
+                                Class 1
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" x-model="visibleClasses[2]" class="form-checkbox text-green-500">
+                                Class 2
+                            </label>
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" x-model="visibleClasses[3]" class="form-checkbox text-red-500">
+                                Class 3
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        <div class="text-center mt-10">
+            <a href="{% url 'upload_success' %}"
+               class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded">
+                {% trans "Back to Upload" %}
+            </a>
+        </div>
+        </div>
+{% endblock %}

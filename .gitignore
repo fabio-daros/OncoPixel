@@ -15,7 +15,6 @@ db.sqlite3
 # Django static and media files
 /staticfiles/
 /media/
-/static/
 
 # Tailwind generated files (caso use o `theme/static/`)
 theme/static_src/
@@ -41,3 +40,11 @@ htmlcov/
 # Migrations
 **/migrations/*.py
 **/migrations/__pycache__/
+
+# === OncoPixel specific ===
+# Backups e resultados
+BackUps/
+media/
+
+# Arquivo JS temporário
+static/js/comments.js
