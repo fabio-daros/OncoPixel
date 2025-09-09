@@ -1,10 +1,161 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends "shared/base.html" %}
+{% load i18n %}
+
+{% block title %}Patient Records - OncoPixel{% endblock %}
+
+{% block content %}
+    <div class="max-w-7xl mx-auto space-y-8">
+        <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-semibold text-white">
+                    {% trans "Review Patient Records" %}
+                </h1>
+                    <p class="text-gray-400 mt-1">
+                        {% trans "Locate images with a reference ID patient." %}
+                    </p>
+            </div>
+        </header>
+
+        <form method="get" class="mb-12 flex flex-col sm:flex-row gap-4 items-left justify-left">
+            <div class="flex flex-col sm:flex-row items-center gap-4 justify-center mb-12">
+                <div class="flex items-center gap-2 whitespace-nowrap">
+                    <label for="patient_id" class="text-base font-semibold text-gray-300">
+                        {% trans "Patient ID:" %}
+                    </label>
+                    <select id="patient_id" name="patient_id"
+                            class="appearance-none px-4 py-2 rounded-lg bg-gray-900 text-white text-left border border-gray-600 w-full sm:max-w-xs focus:outline-none focus:ring-2 focus:ring-green-700 pr-10">
+                        <option value="">{% trans "Select..." %}</option>
+                        {% for pid in all_ids %}
+                            <option value="{{ pid }}"
+                                    {% if query == pid|stringformat:'s' %}selected{% endif %}>{{ pid }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button type="submit"
+                        class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded transition">
+                    {% trans "Search" %}
+                </button>
+            </div>
+        </form>
+
+        {% if results != None %}
+            {% if results %}
+                {% for image in results %}
+                    <div class="text-left text-sm font-semibold text-gray-400 mb-2">
+                        {{ image.filename }}
+                    </div>
+                    <div class="bg-gray-800 rounded-lg shadow-lg p-8 mb-8 flex flex-col md:flex-row gap-2">
+                        <!-- Left: Image -->
+                        <div class="relative flex-1 flex flex-col items-stretch">
+                            <img src="{{ image.image_url }}" alt="Tumor image"
+                                 class="rounded-lg border border-gray-600 w-full object-cover max-h-[500px] min-h-[500px]">
+
+                            <!-- Botão de abrir imagem em nova aba -->
+                            <a href="{{ image.image_url }}" target="_blank" title="{% trans 'Open full image' %}"
+                               class="absolute top-2 right-2 z-10 bg-gray-700 hover:bg-green-600 p-2 rounded-full shadow transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none"
+                                     viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M8 16l-5 5m0 0l5-5m-5 5h16a2 2 0 002-2V4a2 2 0 00-2-2H4a2 2 0 00-2 2v16a2 2 0 002 2z"></path>
+                                </svg>
+                            </a>
+                        </div>
+
+                        <!-- Right: Details -->
+                        <div class="w-full md:w-1/2 space-y-2">
+                            <div class="bg-gray-800 p-2 rounded-lg">
+                                <p class="font-semibold mb-1">{% trans "Patient ID" %}:</p>
+                                <p>{{ image.patient_id }}</p>
+                            </div>
+
+                            <div class="bg-gray-800 p-2 rounded-lg">
+                                <p class="font-semibold mb-1">{% trans "Diagnosis" %}:</p>
+                                <p>{{ image.diagnosis }}</p>
+                            </div>
+
+                            <div class="bg-gray-800 p-2 rounded-lg">
+                                <p class="font-semibold mb-1">{% trans "Confidence" %}:</p>
+                                {% if image.confidence is not None %}
+                                    <p>{{ image.confidence|floatformat:2 }}%</p>
+                                {% else %}
+                                    <p class="text-yellow-400">{% trans "Not available or low confidence" %}</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="bg-gray-800 p-2 rounded-lg">
+                                <p class="font-semibold mb-1">{% trans "Uploaded at" %}:</p>
+                                <p>{{ image.uploaded_at }}</p>
+                            </div>
+
+                            <div class="bg-gray-800 p-2 rounded-lg"
+                                 x-data="{
+                                    editing: false,
+                                    newComment: '{{ image.comment|default_if_none:"" | escapejs }}',
+                                    toastMessage: '',
+                                    toastType: '',
+                                    labelAdd: '{{ _('Add') }}',
+                                    labelEdit: '{{ _('Edit') }}'
+                                 }">
+                              <p class="font-semibold mb-1">{% trans "Annotations" %}:</p>
+
+                              <!-- Visualização -->
+                              <template x-if="!editing">
+                                <div>
+                                  <template x-if="newComment.trim() !== ''">
+                                    <p x-text="newComment"></p>
+                                  </template>
+                                  <template x-if="newComment.trim() === ''">
+                                    <p class="text-gray-400">{% trans "Unhappy" %}</p>
+                                  </template>
+
+                                  <button @click="editing = true"
+                                          class="mt-2 bg-green-600 hover:bg-green-700 text-white text-xs px-3 py-1 rounded">
+                                    <span x-text="newComment.trim() === '' ? labelAdd : labelEdit"></span>
+                                  </button>
+                                </div>
+                              </template>
+
+                              <!-- Edição -->
+                              <template x-if="editing">
+                                <form class="comment-form"
+                                      method="post"
+                                      action="{% url 'image_analysis:add_comment' image.id %}"
+                                      data-image-id="{{ image.id }}"
+                                      data-endpoint="{% url 'image_analysis:add_comment' image.id %}"
+                                      data-success-msg="{% trans 'Annotation saved!' %}"
+                                      data-error-prefix="{% trans 'Error:' %}">
+                                  {% csrf_token %}
+                                  <textarea x-model="newComment"
+                                            class="w-full p-2 rounded bg-gray-900 text-white border border-gray-600"
+                                            rows="4"></textarea>
+                                  <p x-ref="toastMessage" class="hidden text-sm mt-2"></p>
+                                  <div class="flex justify-end mt-2 gap-2">
+                                    <button type="submit"
+                                            class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
+                                      {% trans "Save" %}
+                                    </button>
+                                    <button type="button" @click="editing = false"
+                                            class="bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded text-sm">
+                                      {% trans "Cancel" %}
+                                    </button>
+                                  </div>
+                                </form>
+                              </template>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-center text-gray-400 text-lg mt-8">{% trans "No results to present." %}</p>
+            {% endif %}
+        {% endif %}
+
+        <div class="text-center mt-10">
+            <a href="{% url 'image_analysis:upload_image' %}"
+               class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded">
+                {% trans "Back" %}
+            </a>
+        </div>
+    </div>
+{% endblock %}

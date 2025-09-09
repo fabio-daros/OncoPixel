@@ -1,4 +1,17 @@
 services:
+  db:
+    image: postgres:15
+    container_name: postgres-oncopixel
+    environment:
+      POSTGRES_DB: oncodb
+      POSTGRES_USER: oncoadmin
+      POSTGRES_PASSWORD: oncopass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - shared-network
+    restart: unless-stopped
+
   oncopixel:
     build:
       context: .
@@ -17,3 +30,6 @@ services:
 networks:
   shared-network:
     external: true
+
+volumes:
+  postgres_data:

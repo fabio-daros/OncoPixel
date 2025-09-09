@@ -1,94 +1,123 @@
 {% extends "shared/base.html" %}
 {% load i18n %}
-
+{% block title %}{% trans "Details" %} - OncoPixel{% endblock %}
 {% load custom_filters %}
 
 {% block content %}
-    <style>
-        html {
-            scroll-behavior: smooth;
-        }
-    </style>
-    <div class="text-white max-w-7xl px-6 py-12 mx-auto flex-grow">
-        <h2 class="text-left text-xl font-semibold text-gray-300 mb-4">
-            {% trans "Summary Results:" %}
-        </h2>
 
+    <div class="text-white max-w-screen-2xl px-6 py-12 mx-auto flex-grow">
 
-        {% for image in image_data %}
+        {% with image as image %}
             <div id="image-{{ image.id }}" class="scroll-mt-24"></div>
             <div class="text-left text-sm font-semibold text-gray-400 mb-2">
-                {{ image.filename }}
-            </div>
-            <div class="text-center text-sm mb-2 font-semibold rounded-sm
-        {% if image.confidence %}
-            bg-green-600
-        {% elif image.status == 'error' %}
-            bg-red-600
-        {% else %}
-            bg-yellow-400 text-black
-        {% endif %}">
-                {{ image.status_message }}
+                #{{ image.id }} — {{ image.filename }}
             </div>
             <div class="flex justify-center">
-            <div class="bg-gray-800 rounded-lg shadow-lg p-8 mb-8 flex flex-col md:flex-row gap-2">
-                <!-- Left: Image -->
-                <div x-data="{ openComment: false }" class="relative flex-1 flex flex-col items-stretch">
+                <script id="detections-{{ image.id }}" type="application/json">
+                            {{ image.detections_json|safe }}
+                    </script>
+                <div
+                        x-data="overlayBoxData('detections-{{ image.id }}', {{ image.id }})"
+                        class="relative w-full"
+                >
 
-                    <!-- Container da imagem com overlay -->
-                    <div
-                            x-data="overlayBoxData()"
-                            x-init="detections = {{ image.metadata.detections|default:'[]'|safe }}"
-                            class="relative w-full">
+                    <div class="w-full overflow-x-auto">
+                        <img src="{{ image.url }}"
+                             alt="Tumor image"
+                             x-ref="mainImage"
+                             @load="init()"
+                             class="block w-[1500px] h-auto">
 
-                        <!-- Imagem -->
-                        <div class="relative w-full">
-                            <img src="{{ image.url }}"
-                                 alt="Tumor image"
-                                 x-ref="mainImage"
-                                 @load="imageLoaded = true; imgNaturalWidth = $refs.mainImage.naturalWidth; imgNaturalHeight = $refs.mainImage.naturalHeight;"
-                                 style="display: block; width: 100%; height: auto; max-width: none;">
-                        </div>
-
-                        <!-- Overlay das detecções -->
-                        <template x-if="imageLoaded && detections.length">
-                            <template x-for="(det, index) in detections" :key="index + '-' + redrawKey">
+                        <!-- Overlay das caixas -->
+                        <template x-if="detections.length">
+                            <template x-for="(det, index) in detections" :key="index">
                                 <template x-if="visibleClasses[det.label]">
                                     <div>
                                         <div :style="getLabelStyle(det.box)">
                                             <span x-text="`Class ${det.label} (${(det.score * 100).toFixed(1)}%)`"></span>
                                         </div>
-                                        <div :style="getBoxStyle(det.box, det.label)"></div>
+                                        <div
+                                                :style="getBoxStyle(det.box, det.label)"
+
+                                                @click="handleBoxClick(det)"
+                                                title="{% trans 'Click to analyze this cell' %}"
+                                        ></div>
                                     </div>
                                 </template>
                             </template>
                         </template>
-
-                        <!-- Controles de visibilidade -->
-                        <div class="flex flex-wrap gap-4 mb-2 text-sm text-gray-200 mt-2">
-                            <label class="flex items-center gap-2">
-                                <input type="checkbox" x-model="visibleClasses[1]" class="form-checkbox text-blue-500">
-                                Class 1
-                            </label>
-                            <label class="flex items-center gap-2">
-                                <input type="checkbox" x-model="visibleClasses[2]" class="form-checkbox text-green-500">
-                                Class 2
-                            </label>
-                            <label class="flex items-center gap-2">
-                                <input type="checkbox" x-model="visibleClasses[3]" class="form-checkbox text-red-500">
-                                Class 3
-                            </label>
-                        </div>
                     </div>
+
+                    <div class="mb-4 mt-4">
+                        <label for="cellSelector" class="block text-sm font-semibold mb-1 text-gray-200">
+                            {% trans "Select Cell:" %}
+                        </label>
+                        <select id="cellSelector"
+                                x-model="selectedCellIndex"
+                                @change="handleBoxClick(detections[selectedCellIndex])"
+                                class="bg-gray-800 text-white border border-gray-600 rounded px-3 py-2">
+                            <option value="" disabled selected>{% trans "Choose a cell..." %}</option>
+                            <template x-for="(det, index) in detections.filter((d, i) => visibleClasses[d.label])"
+                                      :key="index">
+                                <option
+                                        :value="detections.indexOf(det)"
+                                        x-text="`Cell ${detections.indexOf(det) + 1} — Class ${det.label} (${(det.score * 100).toFixed(1)}%)`">
+                                </option>
+                            </template>
+
+                        </select>
+                    </div>
+                    <input type="hidden" id="analyzeCellUrl" value="{% url 'image_analysis:analyze_cell' %}">
+                    <!-- Controles de visibilidade -->
+                    <div class="flex flex-wrap gap-4 mb-2 text-sm text-gray-200 mt-2">
+                        <label class="flex items-center gap-2 px-2 py-1 rounded text-white">
+                            <input type="checkbox" x-model="visibleClasses[1]"
+                                   class="form-checkbox accent-blue-600">
+                            Class 1
+                        </label>
+                        <label class="flex items-center gap-2 px-2 py-1 rounded text-white">
+                            <input type="checkbox" x-model="visibleClasses[2]"
+                                   class="form-checkbox accent-green-600">
+                            Class 2
+                        </label>
+                        <label class="flex items-center gap-2 px-2 py-1 rounded text-white">
+                            <input type="checkbox" x-model="visibleClasses[3]"
+                                   class="form-checkbox accent-purple-600">
+                            Class 3
+                        </label>
+                    </div>
+                    <div class="flex items-center gap-2 mb-4 mt-8">
+                        <h2 class="text-xl font-semibold text-gray-300">
+                            {% trans "Region-Level Classifier:" %}
+                        </h2>
+                        <p class="text-gray-400 text-sm">
+                            {% trans "This is an evaluation in the second layer (Select a cell in the image for analysis by the ViT model)" %}
+                        </p>
+                    </div>
+                    <template x-if="showVitResult">
+                        <div class="w-[850px] flex flex-col md:flex-row gap-4 bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
+                            <!-- Left: Cropped Image -->
+                            <div class="flex justify-center items-center">
+                                <img :src="vitCropImage" alt="Cropped Cell" class="w-48 h-48 object-contain border border-gray-600 rounded mb-4">
+                            </div>
+
+                            <!-- Right: Classification Result -->
+                            <div class="flex flex-col justify-center">
+                                <h4 class="font-semibold text-white mb-2">{% trans "ViT Classification Result:" %}</h4>
+                                <p x-text="vitResult" class="text-green-200 text-lg"></p>
+                            </div>
+                        </div>
+                    </template>
+
                 </div>
             </div>
-        {% endfor %}
+        {% endwith %}
 
         <div class="text-center mt-10">
-            <a href="{% url 'upload_success' %}"
-               class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded">
-                {% trans "Back to Upload" %}
-            </a>
+            <button onclick="window.close()"
+                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded">
+                {% trans "Close" %}
+            </button>
         </div>
-        </div>
+    </div>
 {% endblock %}

@@ -2,10 +2,6 @@ import os
 from pathlib import Path
 from django.utils.translation import gettext_lazy as _
 from decouple import config
-import os
-from pathlib import Path
-from django.utils.translation import gettext_lazy as _
-from decouple import config
 
 # Diretório base do projeto
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,10 +24,12 @@ INSTALLED_APPS = [
 
     # Tailwind
     'tailwind',
-    'theme',  # custom theme
+    'theme',
 
     # Apps
     'image_analysis',
+    'dashboard',
+    'patients',
 ]
 
 # Tailwind
@@ -64,6 +62,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                "oncopixel.context_processor.app_version",
             ],
         },
     },
@@ -79,7 +78,7 @@ DATABASES = {
         'NAME': config('POSTGRES_DB', default='oncopixel_db'),
         'USER': config('POSTGRES_USER', default='postgres'),
         'PASSWORD': config('POSTGRES_PASSWORD', default='password'),
-        'HOST': config('POSTGRES_HOST', default='localhost'),
+        'HOST': config('POSTGRES_HOST'),
         'PORT': config('POSTGRES_PORT', default='5432'),
     }
 }
@@ -110,9 +109,22 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+if not DEBUG:
+    STORAGES = {
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage",
+        },
+    }
+
 # Uploads
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Standard automatic field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_REDIRECT_URL = 'dashboard:home'
+LOGIN_URL = 'admin:login'
+
+APP_VERSION = config("APP_VERSION", default="dev")

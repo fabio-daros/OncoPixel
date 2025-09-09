@@ -7,7 +7,9 @@ from django.views.i18n import set_language
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('image_analysis.urls')),
+    path('', include(('dashboard.urls', 'dashboard'), namespace='dashboard')),
+    path('patients/', include(('patients.urls', 'patients'), namespace='patients')),
+    path('image-analysis/', include(('image_analysis.urls', 'image_analysis'), namespace='image_analysis')),
     path('set-language/', set_language, name='set_language'),
 ]
 

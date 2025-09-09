@@ -1,0 +1,150 @@
+{% load i18n %}
+<div id="patientDetailModal" class="hidden fixed inset-0 z-50 items-center justify-center">
+  <!-- overlay -->
+  <div class="absolute inset-0 bg-black/60" data-modal-close></div>
+
+  <!-- content -->
+  <div class="relative mx-4 w-full max-w-3xl rounded-2xl border border-gray-800 bg-gray-950 p-6 shadow-xl">
+    <div class="flex items-start justify-between mb-4">
+      <div>
+        <h3 class="text-xl text-white font-semibold">{% trans "Detail View Patients" %}</h3>
+        <p class="text-gray-400 text-sm">{% trans "Validate patient information." %}</p>
+      </div>
+      <button class="text-gray-400 hover:text-gray-200 text-2xl leading-none" data-modal-close>&times;</button>
+    </div>
+
+    <!-- tabela -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead>
+          <tr class="text-gray-400">
+            <th class="text-left py-2 pr-4">{% trans "Field:" %}</th>
+            <th class="text-left py-2">{% trans "Value:" %}</th>
+          </tr>
+        </thead>
+        <tbody class="align-top text-gray-200">
+          <tr><td class="py-1 pr-4">Id</td><td id="modalPatientId" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">{% trans "Complete Name" %}</td><td id="modalPatientFullName" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">{% trans "Birth" %}</td><td id="modalPatientBirth" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">{% trans "Age" %}</td><td id="modalPatientAge" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">{% trans "Weight" %}</td><td id="modalPatientWeightUnit" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">{% trans "Sex" %}</td><td id="modalPatientSex" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">{% trans "Race" %}</td><td id="modalPatientEthnicity" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">{% trans "Pregnant" %}</td><td id="modalPatientPregnant" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">Email</td><td id="modalPatientEmail" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">{% trans "Phone" %}</td><td id="modalPatientPhone" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">{% trans "Country" %}</td><td id="modalPatientCountry" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">{% trans "State" %}</td><td id="modalPatientState" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">{% trans "County" %}</td><td id="modalPatientCounty" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">{% trans "Address" %}</td><td id="modalPatientAddress" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">{% trans "Zipcode" %}</td><td id="modalPatientZipCode" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">{% trans "Number" %}</td><td id="modalPatientNumber" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">{% trans "Mother's Name" %}</td><td id="modalPatientMotherName" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">{% trans "Document" %}</td><td id="modalPatientDocument" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">CNS</td><td id="modalPatientCns" class="py-1"></td></tr>
+          <tr><td class="py-1 pr-4">{% trans "Notes" %}</td><td id="modalPatientNotes" class="py-1"></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-6 flex justify-end">
+      <button type="button"
+              class="rounded-2xl bg-indigo-600 px-5 py-2 text-white hover:bg-indigo-500"
+              data-modal-close id="closeDetailModal">
+        {% trans "Close" %}
+      </button>
+    </div>
+
+    <!-- ajuda JS: template da URL de detalhe; trocamos /0/ por /<id>/ -->
+    <span id="patient-detail-url-template"
+          data-template="{% url 'patients:detail' 0 %}"
+          class="hidden"></span>
+  </div>
+</div>
+
+<script>
+(function () {
+  const modal = document.getElementById('patientDetailModal');
+  const urlTemplateEl = document.getElementById('patient-detail-url-template');
+
+  function openModal() { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+  function closeModal() { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+
+  function detailUrl(id) {
+    const tpl = urlTemplateEl?.dataset?.template || '/patients/0/';
+    return tpl.replace('/0/', `/${id}/`);
+  }
+
+  async function fetchPatientDetail(id) {
+    const resp = await fetch(detailUrl(id), { method: 'GET' });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    return resp.json();
+  }
+
+  function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = (val ?? '—');
+  }
+
+  function populateDetail(p) {
+    setText('modalPatientId', p.id);
+    setText('modalPatientFullName', `${p.name ?? ''} ${p.surname ?? ''}`.trim());
+    setText('modalPatientBirth', p.birth);
+    setText('modalPatientAge', p.age);
+    setText('modalPatientWeightUnit', `${p.weight ?? '—'} ${p.weight_unit ?? ''}`.trim());
+    setText('modalPatientSex', p.sex);
+    setText('modalPatientEthnicity', p.ethnicity);
+    setText('modalPatientPregnant', p.pregnant);
+    setText('modalPatientEmail', p.email);
+    setText('modalPatientPhone', p.phone);
+    setText('modalPatientCountry', p.country);
+    setText('modalPatientState', p.state);
+    setText('modalPatientCounty', p.county);
+    setText('modalPatientAddress', p.address);
+    setText('modalPatientZipCode', p.zipcode);
+    setText('modalPatientNumber', p.number);
+    setText('modalPatientMotherName', p.mother_name);
+    setText('modalPatientDocument', p.document);
+    setText('modalPatientCns', p.cns);
+    setText('modalPatientNotes', p.notes);
+  }
+
+  // Delegação: qualquer botão/anchor com .view-details abre o modal
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.view-details');
+    if (!btn) return;
+    e.preventDefault();
+
+    const id = btn.dataset.id || btn.getAttribute('data-id');
+    if (!id) return;
+
+    try {
+      // mostrar “loading” básico
+      openModal();
+      document.querySelectorAll('#patientDetailModal td[id^="modalPatient"]').forEach(td => td.textContent = '…');
+
+      const data = await fetchPatientDetail(id);
+      populateDetail(data);
+
+      // se o modal de busca existir e estiver aberto, mantemos ele ao fundo
+      // (não fechamos aqui; só reabrimos no close caso precise)
+    } catch (err) {
+      closeModal();
+      console.error('Error fetching patient details:', err);
+      alert('{% trans "Error fetching patient details." %}');
+    }
+  });
+
+  // fechar modal pelos botões/overlay
+  modal.addEventListener('click', (e) => {
+    if (e.target.hasAttribute('data-modal-close') || e.target.id === 'closeDetailModal') {
+      closeModal();
+      // se quiser reabrir o modal de busca ao fechar (como no BCS):
+      const searchModal = document.getElementById('patientModal');
+      if (searchModal && !searchModal.classList.contains('hidden')) {
+        // nada a fazer; ele já está aberto sob o overlay
+      }
+    }
+  });
+})();
+</script>

@@ -33,5 +33,5 @@ COPY . .
 RUN npm run build
 
 # Rodar o Django
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8001"]
 

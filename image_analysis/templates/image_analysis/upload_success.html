@@ -1,27 +1,214 @@
 {% extends "shared/base.html" %}
 {% load i18n %}
-
+{% block title %}{% trans "Results" %} - OncoPixel{% endblock %}
+{% load custom_filters %}
 {% block content %}
-    <div class="text-white text-center p-10">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+
+    <div class="max-w-7xl mx-auto space-y-8">
+        <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-semibold text-white">
+                    {% trans "Summary Results:" %}
+                </h1>
+            </div>
+        </header>
 
         {% if messages %}
-            <div class="mb-4" x-data="{ show: true }" x-show="show"
-                 x-transition>
+            <div class="mb-6 text-left">
                 {% for message in messages %}
-                    <div class="p-4 mb-2 rounded-lg
-                  {% if message.tags == 'success' %}bg-green-600 text-white{% endif %}
-                  {% if message.tags == 'error' %}bg-red-600 text-white{% endif %}">
-                        {{ message }}
-                    </div>
+                    {% with message|extract_image_id as img_id %}
+                        {% if img_id %}
+                            <a href="#image-{{ img_id }}" class="block w-full max-w-2xl mx-auto text-center p-4 mb-2 rounded-lg
+                                {% if message.tags == 'success' %}bg-green-600 text-white{% endif %}
+                                {% if message.tags == 'error' %}bg-red-600 text-white{% endif %}
+                                {% if message.tags == 'warning' %}bg-yellow-400 text-black{% endif %}
+                                hover:opacity-90 transition">
+                                {{ message }}
+                            </a>
+                        {% else %}
+                            <div class="w-full max-w-2xl mx-auto text-center p-4 mb-2 rounded-lg
+                                {% if message.tags == 'success' %}bg-green-600 text-white{% endif %}
+                                {% if message.tags == 'error' %}bg-red-600 text-white{% endif %}
+                                {% if message.tags == 'warning' %}bg-yellow-400 text-black{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endif %}
+
+                    {% endwith %}
                 {% endfor %}
             </div>
         {% endif %}
 
-        <div class="mt-8">
-            <a href="{% url 'upload_image' %}"
-               class="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded">
-                {% trans "Back to Upload" %}
+        <div class="w-full px-0 mx-0">
+            <h2 class="text-left text-xl font-semibold text-gray-300 mb-4">
+                {% trans "Detailed Results:" %}
+            </h2>
+        </div>
+
+        {% for image in image_data %}
+            <div id="image-{{ image.id }}" class="scroll-mt-24"></div>
+
+            <div class="w-full px-0 mx-0">
+            <div class="text-left text-sm font-semibold text-gray-400 mb-2">
+                #{{ image.id }} — {{ image.filename }}
+            </div>
+            {#        <div class="max-w-7xl px-6 mx-auto">#}
+            {#            <div class="text-center text-sm mb-2 font-semibold rounded-sm#}
+            {#    {% if image.confidence %}#}
+            {#        bg-green-600#}
+            {#    {% elif image.status == 'error' %}#}
+            {#        bg-red-600#}
+            {#    {% else %}#}
+            {#        bg-yellow-400 text-black#}
+            {#    {% endif %}">#}
+            {#                {{ image.status_message }}#}
+            {#            </div>#}
+            {#        </div>#}
+
+            <div class="w-[920px] flex flex-col md:flex-row gap-2 bg-gray-800 rounded-lg shadow-lg p-8 mb-8">
+                <!-- Left: Image -->
+                <div x-data="{ openComment: false }" class="relative flex-1 flex flex-col items-stretch">
+                    <!-- Image container with overlay -->
+                    <div x-data="overlayBoxData()"
+                         x-init="detections = {{ image.metadata.detections|default:'[]'|safe }}"
+                         class="relative w-full">
+                        <!-- Image -->
+                        <div class="relative w-full min-w-[500px]">
+                            <img src="{{ image.url }}"
+                                 alt="Tumor image"
+                                 x-ref="mainImage"
+                                 @load="imageLoaded = true; imgNaturalWidth = $refs.mainImage.naturalWidth; imgNaturalHeight = $refs.mainImage.naturalHeight;"
+                                 class="rounded-lg border border-gray-600 object-contain max-w-[700px] mx-auto"
+                                 style="width: 100%; height: auto;"
+                            >
+                        </div>
+                        <!-- Overlay of detections -->
+                        <template x-if="imageLoaded && detections.length">
+                            <template x-for="(det, index) in detections" :key="index + '-' + redrawKey">
+                                <template x-if="visibleClasses[det.label]">
+                                    <div>
+                                        <div :style="getLabelStyle(det.box)">
+                                            <span x-text="`Class ${det.label} (${(det.score * 100).toFixed(1)}%)`"></span>
+                                        </div>
+                                        <div :style="getBoxStyle(det.box, det.label)"></div>
+                                    </div>
+                                </template>
+                            </template>
+                        </template>
+                        <!-- Contador -->
+                        <div class="text-xs text-yellow-400 mt-2">
+                            <span x-text="`Detections: ${detections.length}`"></span>
+                        </div>
+                        <!-- Visibility controls -->
+                        <div class="flex flex-wrap mb-2 text-sm text-gray-200 mt-2">
+                            <label class="flex items-left gap-2 px-2 py-1 rounded text-white">
+                                <input type="checkbox" x-model="visibleClasses[1]"
+                                       class="form-checkbox accent-blue-600">
+                                Class 1
+                            </label>
+                            <label class="flex items-left gap-2 px-2 py-1 rounded text-white">
+                                <input type="checkbox" x-model="visibleClasses[2]"
+                                       class="form-checkbox accent-green-600">
+                                Class 2
+                            </label>
+                            <label class="flex items-left gap-2 px-2 py-1 rounded text-white">
+                                <input type="checkbox" x-model="visibleClasses[3]"
+                                       class="form-checkbox accent-purple-600">
+                                Class 3
+                            </label>
+                        </div>
+                    </div>
+                    <div class="absolute top-2 right-2 flex items-center space-x-2 z-10">
+                      <!-- Zoom button -->
+                      <a href="{% url 'image_analysis:image_detail' image.id %}" target="_blank"
+                         title="{% trans 'Open full image' %}"
+                         class="bg-gray-700 hover:bg-green-600 w-10 h-10 flex items-center justify-center rounded-full shadow transition">
+                          <i class="fa-solid fa-up-right-and-down-left-from-center text-white text-lg"></i>
+                      </a>
+
+                      <!-- Comment button -->
+                      <button @click="openComment = !openComment"
+                              class="bg-gray-700 hover:bg-green-600 w-10 h-10 flex items-center justify-center rounded-full shadow transition"
+                              title="{% trans 'Add Comment' %}">
+                          <i class="fa-solid fa-pen-to-square text-white text-lg"></i>
+                      </button>
+                    </div>
+                    <!-- Commetns (hidden) -->
+                    <div x-show="openComment" x-cloak x-transition
+                         class="mt-4 bg-gray-800 rounded-lg">
+
+                        <form
+                          class="comment-form"
+                          method="post"
+                          action="{% url 'image_analysis:add_comment' image.id %}"
+                          data-image-id="{{ image.id }}"
+                          data-endpoint="{% url 'image_analysis:add_comment' image.id %}">
+                          {% csrf_token %}
+                          <textarea x-ref="commentInput" name="comment" rows="4"
+                                    class="w-full p-2 rounded bg-gray-900 text-white border border-gray-600"
+                                    placeholder="{% trans 'Annotations...' %}">{{ image.comment }}</textarea>
+
+                          <div x-ref="toastMessage" class="hidden transition-opacity"></div>
+
+                          <div class="flex justify-end mt-3 gap-2">
+                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                              {% trans "Save" %}
+                            </button>
+                            <button type="button" @click="openComment = false"
+                                    class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">
+                              {% trans "Cancel" %}
+                            </button>
+                          </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- Right: Details -->
+                <div class="w-full md:w-1/2 space-y-2">
+                    <div class="bg-gray-800 p-4 rounded-lg">
+                        <p class="font-semibold mb-1">{% trans "Patient ID" %}:</p>
+                        <p>{{ image.patient_id }}</p>
+                    </div>
+
+                    <div class="bg-gray-800 p-4 rounded-lg">
+                        <p class="font-semibold mb-1">{% trans "Diagnosis" %}:</p>
+                        <p>{{ image.diagnosis }}</p>
+                    </div>
+
+                    <div class="bg-gray-800 p-4 rounded-lg">
+                        <p class="font-semibold mb-1">{% trans "Confidence" %}:</p>
+                        {% if image.confidence %}
+                            <p>{{ image.confidence }}%</p>
+                        {% else %}
+                            <p class="text-yellow-400">{% trans "Not available or low confidence" %}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="bg-gray-800 p-4 rounded-lg">
+                        <p class="font-semibold mb-1">{% trans "Uploaded at" %}:</p>
+                        <p>{{ image.uploaded_at }}</p>
+                    </div>
+
+                    {% if image.metadata and image.metadata.prediction %}
+                        <div class="bg-gray-800 p-4 rounded-lg">
+                            <p class="font-semibold">{% trans "Metadata from OncoBrain API" %}:</p>
+                            <pre class="text-sm bg-gray-900 p-3 rounded text-green-200 whitespace-pre-wrap">{{ image.metadata|safe }}</pre>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+
+        <div class="text-center mt-10">
+            <a href="{% url 'image_analysis:upload_image' %}"
+               class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded">
+                {% trans "Back" %}
             </a>
+        </div>
         </div>
     </div>
 {% endblock %}

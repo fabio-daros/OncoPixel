@@ -1,18 +1,25 @@
 {% extends "shared/base.html" %}
 {% load static i18n widget_tweaks %}
 
-{% block title %}Uploads - OncoPixel{% endblock %}
+{% block title %}{% trans "Uploads" %} - OncoPixel{% endblock %}
 
 {% block content %}
-    <div class="max-w-xl mx-auto mt-6 px-6">
-        <!-- Title -->
-        <h1 class="text-5xl font-Normal text-white mb-4 text-center">OncoPixel - Upload</h1>
-        <p class="text-center text-gray-400 text-md mb-6">
-            {% trans "Load images and enter a reference ID." %}
-        </p>
+    <div class="max-w-7xl mx-auto space-y-8">
+        <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+    <div>
+      <h1 class="text-3xl md:text-4xl font-semibold text-white">
+        {% trans "Cervix Image Analysis" %}
+      </h1>
+      <p class="text-gray-400 mt-1">
+        {% trans "Load images with a reference ID patient." %}
+      </p>
+    </div>
+  </header>
+
         <!-- Form -->
         <form method="POST" enctype="multipart/form-data" class="space-y-6 text-left">
             {% csrf_token %}
+
             <!-- Patient ID -->
             <div>
                 <label for="{{ form.patient_id.id_for_label }}" class="block text-gray-300 font-medium mb-2 mt-6">
@@ -23,12 +30,12 @@
                     <p class="text-red-400 text-sm mt-1">{{ form.patient_id.errors.0 }}</p>
                 {% endif %}
             </div>
-            <!-- Upload -->
+
+            <!-- Image Upload -->
             <div>
                 <label class="block text-gray-300 font-medium mb-2">
                     {% trans "Select Image:" %}
                 </label>
-                <!-- Show permitted extensions -->
                 <p class="text-gray-400 text-sm mb-2">
                     {% trans "Allowed file types:" %} {{ allowed_extensions|join:", " }}
                 </p>
@@ -43,26 +50,35 @@
                         {% trans "Choose File" %}
                     </button>
                 </div>
+
                 <p id="file-name" class="text-gray-400 mt-2"></p>
+
                 <!-- Real input -->
-                <input type="file" name="image" id="id_image" accept="image/*"
-                       class="hidden" multiple>
+                <input type="file" name="image" id="id_image" accept="image/*" class="hidden" multiple>
+
                 {% if form.image.errors %}
-                    <div
-                            x-data="{ show: true }"
-                            x-init="setTimeout(() => show = false, 8000)"
-                            x-show="show"
-                            x-transition.opacity.duration.500ms
-                            class="bg-red-100 border border-red-500 px-4 py-3 rounded relative mt-4 text-sm"
-                    >
+                    <div x-data="{ show: true }"
+                         x-init="setTimeout(() => show = false, 8000)"
+                         x-show="show"
+                         x-transition.opacity.duration.500ms
+                         class="bg-red-100 border border-red-500 px-4 py-3 rounded relative mt-4 text-sm">
                         {% for error in form.image.errors %}
                             <p class="text-red-700">{{ error }}</p>
                         {% endfor %}
                     </div>
                 {% endif %}
             </div>
-            <!-- Button -->
+
+            <div class="text-gray-400 text-center text-sm mt-2">
+                <span>{% trans "Cell Detection: Faster R-CNN" %}</span>
+            </div>
+
+            <!-- Buttons -->
             <div class="text-center pt-6 mt-8">
+                <a href="{% url 'image_analysis:search_patient' %}"
+                   class="ml-4 bg-green-700 hover:bg-green-800 transition px-6 py-2 rounded text-white font-semibold cursor-pointer inline-block text-center">
+                    {% trans "Records" %}
+                </a>
                 <button type="submit"
                         class="bg-green-700 hover:bg-green-800 transition px-6 py-2 rounded text-white font-semibold cursor-pointer">
                     {% trans "Analyze" %}
@@ -71,6 +87,7 @@
         </form>
     </div>
 
+    <!-- Upload preview logic -->
     <script>
         const input = document.getElementById("id_image");
         const uploadBtn = document.getElementById("customUploadBtn");
@@ -87,6 +104,4 @@
             }
         });
     </script>
-
-
 {% endblock %}

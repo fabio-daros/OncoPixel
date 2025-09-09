@@ -1,0 +1,73 @@
+{% load i18n static %}
+{# patients/patient_search_modal.html — PARTIAL (sem extends/blocks) #}
+<div id="patientModal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/60" data-modal-close></div>
+  <div class="relative mx-auto my-10 w-full max-w-3xl rounded-2xl bg-gray-900 p-6">
+    <header class="mb-4 flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-white">{% trans "Locate patients" %}</h2>
+      <button data-modal-close class="text-gray-400 hover:text-gray-200">&times;</button>
+    </header>
+
+    <form id="patientSearchForm" class="grid grid-cols-2 gap-3 mb-4">
+      {% csrf_token %}
+      <input class="rounded-xl border border-gray-700 bg-gray-800 px-3 py-2 text-gray-100" name="patient_id" placeholder="ID">
+      <input class="rounded-xl border border-gray-700 bg-gray-800 px-3 py-2 text-gray-100" name="name" placeholder="{% trans 'Name' %}">
+      <input class="rounded-xl border border-gray-700 bg-gray-800 px-3 py-2 text-gray-100" name="surname" placeholder="{% trans 'Surname' %}">
+      <input class="rounded-xl border border-gray-700 bg-gray-800 px-3 py-2 text-gray-100" name="mother_name" placeholder="{% trans 'Mother Name' %}">
+      <input class="rounded-xl border border-gray-700 bg-gray-800 px-3 py-2 text-gray-100" name="document" placeholder="CPF">
+      <input class="rounded-xl border border-gray-700 bg-gray-800 px-3 py-2 text-gray-100" name="cns" placeholder="CNS">
+      <div class="col-span-2 flex justify-end gap-2">
+        <button type="button" class="rounded-xl border border-gray-700 bg-gray-800 px-4 py-2 text-gray-200" data-modal-close>{% trans "Close" %}</button>
+        <button type="submit" class="rounded-xl bg-indigo-600 px-5 py-2 text-white">{% trans "Search" %}</button>
+      </div>
+    </form>
+
+    <div id="searchResults" class="divide-y divide-gray-800"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // abrir/fechar modal (a página já usa data-modal-target / data-modal-close)
+  document.addEventListener('submit', async (e) => {
+    if (e.target && e.target.id === 'patientSearchForm') {
+      e.preventDefault();
+      const form = e.target;
+      const data = new FormData(form);
+      // CSRF
+      const csrftoken = document.querySelector('input[name=csrfmiddlewaretoken]')?.value;
+
+      const resp = await fetch("{% url 'patients:search' %}", {
+        method: 'POST',
+        headers: {'X-CSRFToken': csrftoken},
+        body: data
+      });
+      const json = await resp.json();
+
+      const box = document.getElementById('searchResults');
+      box.innerHTML = '';
+      (json.patients || []).forEach(p => {
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'w-full text-left px-3 py-2 hover:bg-gray-800';
+        row.dataset.id = p.id;
+        row.innerHTML = `<div class="text-gray-200">${p.surname}, ${p.name}</div>
+                         <div class="text-sm text-gray-400">ID: ${p.id} · CNS: ${p.cns || '-'}</div>`;
+        row.addEventListener('click', async () => {
+          // buscar detalhes e abrir o outro modal
+          const r = await fetch("{% url 'patients:detail' 0 %}".replace('/0/', `/${p.id}/`));
+          const det = await r.json();
+          // preenche campos do modal de detalhe (ids devem existir lá)
+          for (const [k,v] of Object.entries(det)) {
+            const el = document.getElementById(`modalPatient${k.charAt(0).toUpperCase()+k.slice(1)}`);
+            if (el) el.textContent = v ?? '';
+          }
+          document.getElementById('patientModal')?.classList.add('hidden');
+          document.getElementById('patientDetailModal')?.classList.remove('hidden');
+        });
+        box.appendChild(row);
+      });
+    }
+  });
+})();
+</script>
